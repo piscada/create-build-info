@@ -19,22 +19,22 @@
 
 ## Overview
 
-The **Create Build Info Action** is a reusable GitHub Action designed to generate build metadata files (`buildInfo.json`, `CHANGELOG.md`, `version.inc`) and optionally update the changelog in your repository. This action leverages [GitVersion](https://gitversion.net/) to determine the semantic version of your project and automates the creation of essential build information files.
+The **Create Build Info Action** is a reusable GitHub Action designed to generate build metadata files (`buildInfo.json`, `CHANGELOG.md`, `version.inc`) and optionally update these files in your repository. This action leverages [GitVersion](https://gitversion.net/) to determine the semantic version of your project and automates the creation and updating of essential build information files.
 
 ## Features
 
 - **Automated Versioning:** Uses GitVersion to generate semantic versioning based on your Git history.
 - **Changelog Generation:** Automatically creates or updates `CHANGELOG.md` with commit messages and previous versions.
 - **Artifact Uploading:** Uploads generated files (`buildInfo.json`, `CHANGELOG.md`, `version.inc`) as workflow artifacts.
-- **Optional Changelog Commit:** Optionally commits and pushes the updated `CHANGELOG.md` to the main branch.
+- **Optional Commit of Build Files:** Optionally commits and pushes the updated `CHANGELOG.md`, `version.inc`, and `buildInfo.json` to the main branch.
 - **Customizable Artifact Name:** Allows specifying a custom name for the uploaded artifact.
 
 ## Inputs
 
-| Input Name       | Description                                         | Required | Default |
-| ---------------- | --------------------------------------------------- | -------- | ------- |
-| `artifact-name`  | Name of the artifact to upload.                     | Yes      | N/A     |
-| `push-changelog` | Whether to commit and push the `CHANGELOG.md` file. | No       | `false` |
+| Input Name       | Description                                                                               | Required | Default |
+| ---------------- | ----------------------------------------------------------------------------------------- | -------- | ------- |
+| `artifact-name`  | Name of the artifact to upload.                                                           | Yes      | N/A     |
+| `push-changelog` | Whether to commit and push the `CHANGELOG.md`, `version.inc`, and `buildInfo.json` files. | No       | `false` |
 
 ### Input Details
 
@@ -42,7 +42,7 @@ The **Create Build Info Action** is a reusable GitHub Action designed to generat
   Specifies the name of the artifact that will be uploaded. This artifact will contain the generated `buildInfo.json`, `CHANGELOG.md`, and `version.inc` files.
 
 - **`push-changelog`** (`boolean`, _optional_):  
-  Determines whether the action should commit and push the updated `CHANGELOG.md` back to the repository. Set to `true` to enable this feature. Defaults to `false`.
+  Determines whether the action should commit and push the updated `CHANGELOG.md`, `version.inc`, and `buildInfo.json` back to the repository. Set to `true` to enable this feature. Defaults to `false`.
 
 ## Outputs
 
@@ -67,7 +67,7 @@ The **Create Build Info Action** is a reusable GitHub Action designed to generat
 
 ### Basic Example
 
-Here's a simple example of how to use the **Create Build Info Action** in your workflow to generate build metadata and upload it as an artifact.
+Here's a simple example of how to use the **Create Build Info Action** in your workflow to generate build metadata and upload it as an artifact without committing changes back to the repository.
 
 ```yaml
 name: Generate Build Info
@@ -80,7 +80,7 @@ on:
 jobs:
   build-info:
     runs-on: ubuntu-latest
-    name: Generate buildInfo.json and CHANGELOG.md
+    name: Generate buildInfo.json, CHANGELOG.md, and version.inc
 
     outputs:
       gitversion_fullsemver: ${{ steps.create-build-info.outputs.gitversion_fullsemver }}

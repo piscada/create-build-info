@@ -62,17 +62,60 @@ runs:
       run: |
         echo "# Changelog" > CHANGELOG.md
         echo "" >> CHANGELOG.md
-        echo "## Version ${{ steps.gitversion.outputs.FullSemVer }}" >> CHANGELOG.md
-        echo "" >> CHANGELOG.md
-        echo "### Commits" >> CHANGELOG.md
-        echo "" >> CHANGELOG.md
-        git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:'- %s' >> CHANGELOG.md
-        echo "" >> CHANGELOG.md
+
+        # Function to generate commits between two tags
+        generate_commits() {
+          local current_tag=$1
+          local previous_tag=$2
+
+          echo "## Version $current_tag" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "### Commits" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+
+          if [ -z "$previous_tag" ]; then
+            # If there is no previous tag, list all commits up to HEAD
+            git log --pretty=format:'- %s' $current_tag..HEAD >> CHANGELOG.md
+          else
+            git log --pretty=format:'- %s' $previous_tag..$current_tag >> CHANGELOG.md
+          fi
+
+          echo "" >> CHANGELOG.md
+        }
+
+        # Get the current version
+        current_version="${{ steps.gitversion.outputs.FullSemVer }}"
+        previous_tag=$(git describe --tags --abbrev=0 $current_version^)
+
+        # Generate changelog for the current version
+        generate_commits "$current_version" "$previous_tag"
+
+        # Get the last 5 tags excluding pre-release tags
         echo "## Previous Versions" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
-        git tag --sort=-creatordate | grep -v "${{ steps.gitversion.outputs.PreReleaseTag }}" | head -n 5 | while read tag; do
+
+        tags=$(git tag --sort=-creatordate | grep -v "${{ steps.gitversion.outputs.PreReleaseTag }}" | head -n 5)
+
+        for tag in $tags; do
+          # Find the previous tag for each tag
+          previous=$(git describe --tags --abbrev=0 "$tag^" 2>/dev/null || echo "")
+
+          echo "## Version $tag" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "### Commits" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+
+          if [ -z "$previous" ]; then
+            # If there is no previous tag, list all commits up to this tag
+            git log --pretty=format:'- %s' "$tag" >> CHANGELOG.md
+          else
+            git log --pretty=format:'- %s' "$previous".."$tag" >> CHANGELOG.md
+          fi
+
+          echo "" >> CHANGELOG.md
           echo "- [$tag](https://github.com/${{ github.repository }}/releases/tag/$tag)" >> CHANGELOG.md
         done
+
       shell: bash
 
     - name: Commit and Push CHANGELOG.md
@@ -80,7 +123,7 @@ runs:
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-        git add CHANGELOG.md
+        git add CHANGELOG.md buildInfo.json version.inc
         git commit -m "chore: update CHANGELOG.md [skip ci]"
         git push origin main
       shell: bash
