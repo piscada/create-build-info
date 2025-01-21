@@ -1,0 +1,95 @@
+name: "Create Build Info"
+description: "Generates buildInfo.json, CHANGELOG.md, version.inc, and optionally commits the changelog."
+author: "Your Name <you@example.com>"
+inputs:
+  artifact-name:
+    description: "Name of the artifact to upload."
+    required: true
+    type: string
+  push-changelog:
+    description: "Whether to commit and push the CHANGELOG.md file."
+    required: false
+    default: false
+    type: boolean
+outputs:
+  gitversion_fullsemver:
+    description: "Full semantic version from GitVersion."
+    value: ${{ steps.gitversion.outputs.FullSemVer }}
+  gitversion_majorminorpatch:
+    description: "Major.Minor.Patch version from GitVersion."
+    value: ${{ steps.gitversion.outputs.MajorMinorPatch }}
+  gitversion_prereleasetag:
+    description: "Pre-release tag from GitVersion."
+    value: ${{ steps.gitversion.outputs.PreReleaseTag }}
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Ensure full history for GitVersion
+
+    - name: Remove Extra Git Remotes (so we're able to run "act" command locally for test)
+      run: |
+        remotes=$(git remote)
+        for remote in $remotes; do
+          if [ "$remote" != "origin" ]; then
+            git remote remove "$remote"
+            echo "Removed remote: $remote"
+          fi
+        done
+      shell: bash
+
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v0.10.2
+      with:
+        versionSpec: "5.x"
+
+    - name: Determine Version
+      id: gitversion
+      uses: gittools/actions/gitversion/execute@v0.10.2
+      with:
+        useConfigFile: true
+        additionalArguments: "/output file /outputfile buildInfo.json"
+
+    - name: Save FullSemVer to version.inc
+      run: |
+        echo "#define Version \"${{ steps.gitversion.outputs.FullSemVer }}\"" > version.inc
+        cat version.inc
+      shell: bash
+
+    - name: Generate CHANGELOG.md
+      run: |
+        echo "# Changelog" > CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "## Version ${{ steps.gitversion.outputs.FullSemVer }}" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "### Commits" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:'- %s' >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "## Previous Versions" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        git tag --sort=-creatordate | grep -v "${{ steps.gitversion.outputs.PreReleaseTag }}" | head -n 5 | while read tag; do
+          echo "- [$tag](https://github.com/${{ github.repository }}/releases/tag/$tag)" >> CHANGELOG.md
+        done
+      shell: bash
+
+    - name: Commit and Push CHANGELOG.md
+      if: ${{ inputs.push-changelog == 'true' && github.ref == 'refs/heads/main' }}
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add CHANGELOG.md
+        git commit -m "chore: update CHANGELOG.md [skip ci]"
+        git push origin main
+      shell: bash
+
+    - name: Upload build-info artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: |
+          buildInfo.json
+          CHANGELOG.md
+          version.inc
