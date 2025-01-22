@@ -51,9 +51,9 @@ jobs:
     name: Generate buildInfo.json, CHANGELOG.md, and version.inc
 
     outputs:
-      version_fullsemver: ${{ steps.create-build-info.outputs.version_fullsemver }}
-      version_majorminorpatch: ${{ steps.create-build-info.outputs.version_majorminorpatch }}
-      version_prereleasetag: ${{ steps.create-build-info.outputs.version_prereleasetag }}
+      version_fullsemver: ${{ steps.nfo.outputs.version_fullsemver }}
+      version_majorminorpatch: ${{ steps.nfo.outputs.version_majorminorpatch }}
+      version_prereleasetag: ${{ steps.nfo.outputs.version_prereleasetag }}
 
     steps:
       - name: Checkout code
@@ -63,16 +63,16 @@ jobs:
 
       - name: Create build meta files
         id: create-build-info
-        uses: piscada/create-build-info@v1
+        uses: piscada/create-build-info@v7
         with:
           artifact-name: build-info
           push-changelog: false
 
       - name: Use Version Outputs
         run: |
-          echo "Full SemVer: ${{ steps.create-build-info.outputs.version_fullsemver }}"
-          echo "Major.Minor.Patch: ${{ steps.create-build-info.outputs.version_majorminorpatch }}"
-          echo "Pre-release Tag: ${{ steps.create-build-info.outputs.version_prereleasetag }}"
+          echo "Full SemVer: ${{ steps.nfo.outputs.version_fullsemver }}"
+          echo "Major.Minor.Patch: ${{ steps.nfo.outputs.version_majorminorpatch }}"
+          echo "Pre-release Tag: ${{ steps.nfo.outputs.version_prereleasetag }}"
 ```
 
 # License
