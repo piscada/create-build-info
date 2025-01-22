@@ -4,9 +4,39 @@
 ![Version](https://img.shields.io/github/v/tag/piscada/create-build-info?label=version)
 ![License](https://img.shields.io/github/license/piscada/create-build-info)
 
+## TLDR update code:
+
+- Remember to `git tag v1.2.3`
+- `git push origin v1.2.3`
+- Create release on github.com/piscada/create-build-info
+
+## Example output:
+
+```json
+// buildInfo.json
+{
+  "CommitDate": "2024-10-24 12:34:56 -0700",
+  "PreReleaseNumber": 2409,
+  "PreReleaseLabel": "ci",
+  "FullSemVer": "0.1.0-ci.2409",
+  "MajorMinorPatch": "0.1.0",
+  "SemVer": "0.1.0-ci.2409",
+  "Major": 0,
+  "Minor": 1,
+  "Patch": 0,
+  "CommitId": "c2c23b7846df259d262a05fb63f5e890112efeb1",
+  "ShortCommitId": "c2c23b7",
+  "CommitMessage": "Your latest commit message",
+  "BranchName": "main",
+  "RunNumber": "123"
+}
+```
+
 ## Table of Contents
 
 - [Create Build Info Action](#create-build-info-action)
+  - [TLDR update code:](#tldr-update-code)
+  - [Example output:](#example-output)
   - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
   - [Features](#features)
