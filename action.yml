@@ -16,13 +16,13 @@ inputs:
 outputs:
   version_fullsemver:
     description: "Full semantic version."
-    value: ${{ env.fullsemver }}
+    value: ${{ steps.set-github-output-vars.outputs.version_fullsemver }}
   version_majorminorpatch:
     description: "Major.Minor.Patch version."
-    value: ${{ env.majorminorpatch }}
+    value: ${{ steps.set-github-output-vars.outputs.version_majorminorpatch }}
   version_prereleasetag:
     description: "Pre-release tag."
-    value: ${{ env.pre_releaselabel }}
+    value: ${{ steps.set-github-output-vars.outputs.version_prereleasetag }}
 
 runs:
   using: "composite"
@@ -220,6 +220,15 @@ runs:
 
         # Push the new tag
         git push origin "$FULL_SEMVER"
+      shell: bash
+
+    - name: Set github output variables
+      id: set-github-output-vars
+      run: |
+        echo "version_fullsemver= ${{ env.fullsemver }}" >> $GITHUB_OUTPUT
+        echo "version_majorminorpatch= ${{ env.majorminorpatch }}" >> $GITHUB_OUTPUT
+        echo "version_prereleasetag= ${{ env.pre_releaselabel }}" >> $GITHUB_OUTPUT
+
       shell: bash
 
     - name: Upload build-info artifact
