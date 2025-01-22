@@ -129,6 +129,7 @@ runs:
       run: |
         #!/bin/bash
         set -e
+        set -x  # Enable verbose logging
 
         echo "Starting CHANGELOG.md generation..."
 
@@ -185,12 +186,13 @@ runs:
 
         # Generate changelog for the current version
         generate_commits "$previous_tag" "$end_ref"
+        echo "After generate_commits"
 
         # Get the last 5 tags excluding pre-release tags
         echo "## Previous Versions" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
 
-        tags=$(git tag --sort=-creatordate | grep -v "ci" | head -n 5)
+        tags=$(git tag --sort=-creatordate | grep -v "ci" | head -n 5) || tags=""
         echo "Retrieved Tags (excluding 'ci' pre-releases):"
         echo "$tags"
 
