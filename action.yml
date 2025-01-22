@@ -91,23 +91,23 @@ runs:
 
         # Create buildInfo.json
         cat > buildInfo.json <<EOF
-{
-  "CommitDate": "${COMMIT_DATE}",
-  "PreReleaseNumber": ${PRE_RELEASE_NUMBER},
-  "PreReleaseLabel": "${PRE_RELEASE_LABEL}",
-  "FullSemVer": "${FULL_SEMVER}",
-  "MajorMinorPatch": "${MAJOR_MINOR_PATCH}",
-  "SemVer": "${SEMVER}",
-  "Major": ${MAJOR},
-  "Minor": ${MINOR},
-  "Patch": ${PATCH},
-  "CommitId": "${COMMIT_ID}",
-  "ShortCommitId": "${SHORT_COMMIT_ID}",
-  "CommitMessage": "${COMMIT_MESSAGE}",
-  "BranchName": "${BRANCH_NAME}",
-  "RunNumber": "${RUN_NUMBER}"
-}
-EOF
+        {
+          "CommitDate": "${COMMIT_DATE}",
+          "PreReleaseNumber": ${PRE_RELEASE_NUMBER},
+          "PreReleaseLabel": "${PRE_RELEASE_LABEL}",
+          "FullSemVer": "${FULL_SEMVER}",
+          "MajorMinorPatch": "${MAJOR_MINOR_PATCH}",
+          "SemVer": "${SEMVER}",
+          "Major": ${MAJOR},
+          "Minor": ${MINOR},
+          "Patch": ${PATCH},
+          "CommitId": "${COMMIT_ID}",
+          "ShortCommitId": "${SHORT_COMMIT_ID}",
+          "CommitMessage": "${COMMIT_MESSAGE}",
+          "BranchName": "${BRANCH_NAME}",
+          "RunNumber": "${RUN_NUMBER}"
+        }
+        EOF
 
         # Display buildInfo.json for debugging
         cat buildInfo.json
