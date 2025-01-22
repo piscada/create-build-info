@@ -132,7 +132,7 @@ runs:
         echo "# Changelog" > CHANGELOG.md
         echo "" >> CHANGELOG.md
 
-        # Function to generate commits between two tags
+        # Function to generate commits between two revisions
         generate_commits() {
           local previous_tag=$1
           local end_ref=$2
@@ -143,9 +143,10 @@ runs:
           echo "" >> CHANGELOG.md
 
           if [ -z "$previous_tag" ]; then
-            # If there is no previous tag, list all commits up to end_ref
+            # If there is no previous tag, list all commits up to end_ref (HEAD)
             git log --pretty=format:'- %s' "$end_ref" >> CHANGELOG.md
           else
+            # List commits between previous_tag and end_ref (HEAD)
             git log --pretty=format:'- %s' "$previous_tag".."$end_ref" >> CHANGELOG.md
           fi
 
@@ -155,8 +156,8 @@ runs:
         # Get the previous tag
         previous_tag=$(git describe --tags --abbrev=0 "${LATEST_TAG}^" 2>/dev/null || echo "")
 
-        # Get the end reference (current HEAD)
-        end_ref="$FULL_SEMVER"
+        # Define the end reference as HEAD
+        end_ref="HEAD"
 
         # Generate changelog for the current version
         generate_commits "$previous_tag" "$end_ref"
