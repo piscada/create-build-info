@@ -1,6 +1,6 @@
 name: "Create Build Info"
 description: "Generates buildInfo.json, CHANGELOG.md, version.inc, and optionally commits the changelog."
-author: "Your Name <you@example.com>"
+author: "Magnus Gule <magnus.gule@piscada.com>"
 inputs:
   artifact-name:
     description: "Name of the artifact to upload."
@@ -12,24 +12,24 @@ inputs:
     default: false
     type: boolean
 outputs:
-  gitversion_fullsemver:
-    description: "Full semantic version from GitVersion."
-    value: ${{ steps.gitversion.outputs.FullSemVer }}
-  gitversion_majorminorpatch:
-    description: "Major.Minor.Patch version from GitVersion."
-    value: ${{ steps.gitversion.outputs.MajorMinorPatch }}
-  gitversion_prereleasetag:
-    description: "Pre-release tag from GitVersion."
-    value: ${{ steps.gitversion.outputs.PreReleaseTag }}
+  version_fullsemver:
+    description: "Full semantic version."
+    value: ${{ steps.set_version.outputs.fullsemver }}
+  version_majorminorpatch:
+    description: "Major.Minor.Patch version."
+    value: ${{ steps.set_version.outputs.majorminorpatch }}
+  version_prereleasetag:
+    description: "Pre-release tag."
+    value: ${{ steps.set_version.outputs.prereleasetag }}
 runs:
   using: "composite"
   steps:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0 # Ensure full history for GitVersion
+        fetch-depth: 0 # Ensure full history for versioning
 
-    - name: Remove Extra Git Remotes (so we're able to run "act" command locally for test)
+    - name: Remove Extra Git Remotes
       run: |
         remotes=$(git remote)
         for remote in $remotes; do
@@ -40,21 +40,83 @@ runs:
         done
       shell: bash
 
-    - name: Install GitVersion
-      uses: gittools/actions/gitversion/setup@v0.10.2
-      with:
-        versionSpec: "5.x"
+    - name: Set Version Information
+      id: set_version
+      run: |
+        # Get Commit Information
+        COMMIT_DATE=$(git show -s --format=%ci)
+        COMMIT_ID=$(git rev-parse HEAD)
+        SHORT_COMMIT_ID=$(git rev-parse --short HEAD)
+        COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+        BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+        RUN_NUMBER=${GITHUB_RUN_NUMBER}
 
-    - name: Determine Version
-      id: gitversion
-      uses: gittools/actions/gitversion/execute@v0.10.2
-      with:
-        useConfigFile: true
-        additionalArguments: "/output file /outputfile buildInfo.json"
+        # Determine Version Information
+        # Example versioning logic:
+        # - Use the latest tag as the base version
+        # - Increment patch number for new commits
+        # - Append run number as pre-release
+
+        LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+        BASE_VERSION=${LATEST_TAG#v}
+        MAJOR=$(echo $BASE_VERSION | cut -d. -f1)
+        MINOR=$(echo $BASE_VERSION | cut -d. -f2)
+        PATCH=$(echo $BASE_VERSION | cut -d. -f3)
+
+        # Count commits since the latest tag for PreReleaseNumber
+        COMMITS_SINCE_TAG=$(git rev-list ${LATEST_TAG}..HEAD --count)
+        PRE_RELEASE_LABEL="ci"
+        PRE_RELEASE_NUMBER=$COMMITS_SINCE_TAG
+
+        # Construct Semantic Version
+        FULL_SEMVER="$MAJOR.$MINOR.$PATCH-$PRE_RELEASE_LABEL.$PRE_RELEASE_NUMBER"
+        SEMVER="$MAJOR.$MINOR.$PATCH-$PRE_RELEASE_LABEL.$PRE_RELEASE_NUMBER"
+        MAJOR_MINOR_PATCH="$MAJOR.$MINOR.$PATCH"
+
+        # Export variables for subsequent steps
+        echo "::set-output name=commitdate::$COMMIT_DATE"
+        echo "::set-output name=pre_releasenumber::$PRE_RELEASE_NUMBER"
+        echo "::set-output name=pre_releaselabel::$PRE_RELEASE_LABEL"
+        echo "::set-output name=fullsemver::$FULL_SEMVER"
+        echo "::set-output name=majorminorpatch::$MAJOR_MINOR_PATCH"
+        echo "::set-output name=semver::$SEMVER"
+        echo "::set-output name=major::$MAJOR"
+        echo "::set-output name=minor::$MINOR"
+        echo "::set-output name=patch::$PATCH"
+        echo "::set-output name=commitid::$COMMIT_ID"
+        echo "::set-output name=shortcommitid::$SHORT_COMMIT_ID"
+        echo "::set-output name=commitmessage::$COMMIT_MESSAGE"
+        echo "::set-output name=branchname::$BRANCH_NAME"
+        echo "::set-output name=runnumber::$RUN_NUMBER"
+
+        # Create buildInfo.json
+        cat > buildInfo.json <<EOF
+{
+  "CommitDate": "${COMMIT_DATE}",
+  "PreReleaseNumber": ${PRE_RELEASE_NUMBER},
+  "PreReleaseLabel": "${PRE_RELEASE_LABEL}",
+  "FullSemVer": "${FULL_SEMVER}",
+  "MajorMinorPatch": "${MAJOR_MINOR_PATCH}",
+  "SemVer": "${SEMVER}",
+  "Major": ${MAJOR},
+  "Minor": ${MINOR},
+  "Patch": ${PATCH},
+  "CommitId": "${COMMIT_ID}",
+  "ShortCommitId": "${SHORT_COMMIT_ID}",
+  "CommitMessage": "${COMMIT_MESSAGE}",
+  "BranchName": "${BRANCH_NAME}",
+  "RunNumber": "${RUN_NUMBER}"
+}
+EOF
+
+        # Display buildInfo.json for debugging
+        cat buildInfo.json
+
+      shell: bash
 
     - name: Save FullSemVer to version.inc
       run: |
-        echo "#define Version \"${{ steps.gitversion.outputs.FullSemVer }}\"" > version.inc
+        echo "#define Version \"${{ steps.set_version.outputs.fullsemver }}\"" > version.inc
         cat version.inc
       shell: bash
 
@@ -75,17 +137,17 @@ runs:
 
           if [ -z "$previous_tag" ]; then
             # If there is no previous tag, list all commits up to HEAD
-            git log --pretty=format:'- %s' $current_tag..HEAD >> CHANGELOG.md
+            git log --pretty=format:'- %s' "$current_tag"..HEAD >> CHANGELOG.md
           else
-            git log --pretty=format:'- %s' $previous_tag..$current_tag >> CHANGELOG.md
+            git log --pretty=format:'- %s' "$previous_tag".."$current_tag" >> CHANGELOG.md
           fi
 
           echo "" >> CHANGELOG.md
         }
 
         # Get the current version
-        current_version="${{ steps.gitversion.outputs.FullSemVer }}"
-        previous_tag=$(git describe --tags --abbrev=0 $current_version^)
+        current_version="${{ steps.set_version.outputs.fullsemver }}"
+        previous_tag=$(git describe --tags --abbrev=0 "${LATEST_TAG}^" 2>/dev/null || echo "")
 
         # Generate changelog for the current version
         generate_commits "$current_version" "$previous_tag"
@@ -94,7 +156,7 @@ runs:
         echo "## Previous Versions" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
 
-        tags=$(git tag --sort=-creatordate | grep -v "${{ steps.gitversion.outputs.PreReleaseTag }}" | head -n 5)
+        tags=$(git tag --sort=-creatordate | grep -v "${{ steps.set_version.outputs.pre_releaselabel }}" | head -n 5)
 
         for tag in $tags; do
           # Find the previous tag for each tag
@@ -123,7 +185,9 @@ runs:
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-        git add CHANGELOG.md buildInfo.json version.inc
+        git add CHANGELOG.md 
+        git add buildInfo.json
+        git add version.inc
         git commit -m "chore: update CHANGELOG.md [skip ci]"
         git push origin main
       shell: bash
