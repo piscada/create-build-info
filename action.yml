@@ -154,8 +154,15 @@ runs:
           echo "" >> CHANGELOG.md
         }
 
+        # Define LATEST_TAG
+        LATEST_TAG="$FULL_SEMVER"
+
+        echo "Latest Tag: $LATEST_TAG"
+
         # Get the previous tag
         previous_tag=$(git describe --tags --abbrev=0 "${LATEST_TAG}^" 2>/dev/null || echo "")
+
+        echo "Previous Tag: $previous_tag"
 
         # Define the end reference as HEAD
         end_ref="HEAD"
@@ -186,7 +193,7 @@ runs:
           fi
 
           echo "" >> CHANGELOG.md
-          echo "- [$tag](https://github.com/piscada/mtx/releases/tag/$tag)" >> CHANGELOG.md
+          echo "- [$tag](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/tag/$tag)" >> CHANGELOG.md
         done
       shell: bash
 
