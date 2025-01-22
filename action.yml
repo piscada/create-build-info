@@ -134,30 +134,32 @@ runs:
 
         # Function to generate commits between two tags
         generate_commits() {
-          local current_tag=$1
-          local previous_tag=$2
+          local previous_tag=$1
+          local end_ref=$2
 
-          echo "## Version $current_tag" >> CHANGELOG.md
+          echo "## Version $end_ref" >> CHANGELOG.md
           echo "" >> CHANGELOG.md
           echo "### Commits" >> CHANGELOG.md
           echo "" >> CHANGELOG.md
 
           if [ -z "$previous_tag" ]; then
-            # If there is no previous tag, list all commits up to HEAD
-            git log --pretty=format:'- %s' "$current_tag"..HEAD >> CHANGELOG.md
+            # If there is no previous tag, list all commits up to end_ref
+            git log --pretty=format:'- %s' "$end_ref" >> CHANGELOG.md
           else
-            git log --pretty=format:'- %s' "$previous_tag".."$current_tag" >> CHANGELOG.md
+            git log --pretty=format:'- %s' "$previous_tag".."$end_ref" >> CHANGELOG.md
           fi
 
           echo "" >> CHANGELOG.md
         }
 
-        # Get the current version
-        current_version="${{ env.fullsemver }}"
+        # Get the previous tag
         previous_tag=$(git describe --tags --abbrev=0 "${LATEST_TAG}^" 2>/dev/null || echo "")
 
+        # Get the end reference (current HEAD)
+        end_ref="$FULL_SEMVER"
+
         # Generate changelog for the current version
-        generate_commits "$current_version" "$previous_tag"
+        generate_commits "$previous_tag" "$end_ref"
 
         # Get the last 5 tags excluding pre-release tags
         echo "## Previous Versions" >> CHANGELOG.md
@@ -200,6 +202,22 @@ runs:
         git commit -m "Update CHANGELOG and build info [skip ci]" || echo "No changes to commit"
 
         git push origin main
+      shell: bash
+
+    - name: Tag the New Version
+      if: ${{ inputs.push-changelog == 'true' && github.ref == 'refs/heads/main' }}
+      run: |
+        #!/bin/bash
+        set -e
+
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+
+        # Create a new tag
+        git tag "$FULL_SEMVER"
+
+        # Push the new tag
+        git push origin "$FULL_SEMVER"
       shell: bash
 
     - name: Upload build-info artifact
