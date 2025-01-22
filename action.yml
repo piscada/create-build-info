@@ -130,13 +130,21 @@ runs:
         #!/bin/bash
         set -e
 
+        echo "Starting CHANGELOG.md generation..."
+
         echo "# Changelog" > CHANGELOG.md
         echo "" >> CHANGELOG.md
 
         # Function to generate commits between two revisions
         generate_commits() {
-          local previous_tag=$1
-          local end_ref=$2
+          local previous_tag="$1"
+          local end_ref="$2"
+
+          echo "-------------------------------"
+          echo "Generating commits between:"
+          echo "Previous Tag: '$previous_tag'"
+          echo "End Reference: '$end_ref'"
+          echo "-------------------------------"
 
           echo "## Version $end_ref" >> CHANGELOG.md
           echo "" >> CHANGELOG.md
@@ -144,11 +152,21 @@ runs:
           echo "" >> CHANGELOG.md
 
           if [ -z "$previous_tag" ]; then
-            # If there is no previous tag, list all commits up to end_ref (HEAD)
-            git log --pretty=format:'- %s' "$end_ref" >> CHANGELOG.md
+            echo "No previous tag found. Listing all commits up to '$end_ref'."
+            if git log --pretty=format:'- %s' "$end_ref" >> CHANGELOG.md; then
+              echo "Successfully listed commits up to '$end_ref'."
+            else
+              echo "Failed to list commits up to '$end_ref'."
+              exit 1
+            fi
           else
-            # List commits between previous_tag and end_ref (HEAD)
-            git log --pretty=format:'- %s' "$previous_tag".."$end_ref" >> CHANGELOG.md
+            echo "Listing commits between '$previous_tag' and '$end_ref'."
+            if git log --pretty=format:'- %s' "$previous_tag".."$end_ref" >> CHANGELOG.md; then
+              echo "Successfully listed commits between '$previous_tag' and '$end_ref'."
+            else
+              echo "Failed to list commits between '$previous_tag' and '$end_ref'."
+              exit 1
+            fi
           fi
 
           echo "" >> CHANGELOG.md
@@ -156,13 +174,11 @@ runs:
 
         # Define LATEST_TAG
         LATEST_TAG="$FULL_SEMVER"
-
         echo "Latest Tag: $LATEST_TAG"
 
         # Get the previous tag
         previous_tag=$(git describe --tags --abbrev=0 "${LATEST_TAG}^" 2>/dev/null || echo "")
-
-        echo "Previous Tag: $previous_tag"
+        echo "Previous Tag: '$previous_tag'"
 
         # Define the end reference as HEAD
         end_ref="HEAD"
@@ -175,15 +191,21 @@ runs:
         echo "" >> CHANGELOG.md
 
         tags=$(git tag --sort=-creatordate | grep -v "ci" | head -n 5)
+        echo "Retrieved Tags (excluding 'ci' pre-releases):"
+        echo "$tags"
 
         for tag in $tags; do
           # Skip empty tags
           if [ -z "$tag" ]; then
+            echo "Encountered an empty tag. Skipping..."
             continue
           fi
 
+          echo "Processing Tag: '$tag'"
+
           # Find the previous tag for each tag
           previous=$(git describe --tags --abbrev=0 "$tag^" 2>/dev/null || echo "")
+          echo "Previous Tag for '$tag': '$previous'"
 
           echo "## Version $tag" >> CHANGELOG.md
           echo "" >> CHANGELOG.md
@@ -191,15 +213,30 @@ runs:
           echo "" >> CHANGELOG.md
 
           if [ -z "$previous" ]; then
-            # If there is no previous tag, list all commits up to this tag
-            git log --pretty=format:'- %s' "$tag" >> CHANGELOG.md
+            echo "No previous tag found for '$tag'. Listing all commits up to '$tag'."
+            if git log --pretty=format:'- %s' "$tag" >> CHANGELOG.md; then
+              echo "Successfully listed commits up to '$tag'."
+            else
+              echo "Failed to list commits up to '$tag'."
+              exit 1
+            fi
           else
-            git log --pretty=format:'- %s' "$previous".."$tag" >> CHANGELOG.md
+            echo "Listing commits between '$previous' and '$tag'."
+            if git log --pretty=format:'- %s' "$previous".."$tag" >> CHANGELOG.md; then
+              echo "Successfully listed commits between '$previous' and '$tag'."
+            else
+              echo "Failed to list commits between '$previous' and '$tag'."
+              exit 1
+            fi
           fi
 
           echo "" >> CHANGELOG.md
           echo "- [$tag](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/tag/$tag)" >> CHANGELOG.md
+
+          echo "Completed processing Tag: '$tag'"
         done
+
+        echo "CHANGELOG.md generation completed successfully."
       shell: bash
 
     - name: Commit and Push CHANGELOG.md
