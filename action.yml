@@ -29,8 +29,19 @@ runs:
       with:
         fetch-depth: 0 # Ensure full history for versioning
 
+    - name: Set +x to all scripts
+      run: chmod +x scripts/*.sh
+      shell: bash
+
     - name: Remove Extra Git Remotes
-      run: ./scripts/remove_git_remotes.sh
+      run: |
+        remotes=$(git remote)
+        for remote in $remotes; do
+          if [ "$remote" != "origin" ]; then
+            git remote remove "$remote"
+            echo "Removed remote: $remote"
+          fi
+        done
       shell: bash
 
     - name: Set Version Information
