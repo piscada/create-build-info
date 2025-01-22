@@ -225,9 +225,9 @@ runs:
     - name: Set github output variables
       id: set-github-output-vars
       run: |
-        echo "version_fullsemver= ${{ env.fullsemver }}" >> $GITHUB_OUTPUT
-        echo "version_majorminorpatch= ${{ env.majorminorpatch }}" >> $GITHUB_OUTPUT
-        echo "version_prereleasetag= ${{ env.pre_releaselabel }}" >> $GITHUB_OUTPUT
+        echo "version_fullsemver=${{ env.fullsemver }}" >> $GITHUB_OUTPUT
+        echo "version_majorminorpatch=${{ env.majorminorpatch }}" >> $GITHUB_OUTPUT
+        echo "version_prereleasetag=${{ env.pre_releaselabel }}" >> $GITHUB_OUTPUT
 
       shell: bash
 
