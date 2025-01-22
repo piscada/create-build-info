@@ -177,6 +177,11 @@ runs:
         tags=$(git tag --sort=-creatordate | grep -v "ci" | head -n 5)
 
         for tag in $tags; do
+          # Skip empty tags
+          if [ -z "$tag" ]; then
+            continue
+          fi
+
           # Find the previous tag for each tag
           previous=$(git describe --tags --abbrev=0 "$tag^" 2>/dev/null || echo "")
 
