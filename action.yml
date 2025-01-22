@@ -1,6 +1,7 @@
 name: "Create Build Info"
 description: "Generates buildInfo.json, CHANGELOG.md, version.inc, and optionally commits the changelog."
 author: "Magnus Gule <magnus.gule@piscada.com>"
+
 inputs:
   artifact-name:
     description: "Name of the artifact to upload."
@@ -11,6 +12,7 @@ inputs:
     required: false
     default: false
     type: boolean
+
 outputs:
   version_fullsemver:
     description: "Full semantic version."
@@ -21,6 +23,7 @@ outputs:
   version_prereleasetag:
     description: "Pre-release tag."
     value: ${{ env.pre_releaselabel }}
+
 runs:
   using: "composite"
   steps:
@@ -29,19 +32,15 @@ runs:
       with:
         fetch-depth: 0 # Ensure full history for versioning
 
-    - name: Set +x to all scripts
-      run: chmod +x scripts/*.sh
+    - name: Set executable permissions for scripts
+      run: |
+        # Print everything in the current directory
+        ls -la
+        chmod +x scripts/*.sh
       shell: bash
 
     - name: Remove Extra Git Remotes
-      run: |
-        remotes=$(git remote)
-        for remote in $remotes; do
-          if [ "$remote" != "origin" ]; then
-            git remote remove "$remote"
-            echo "Removed remote: $remote"
-          fi
-        done
+      run: ./scripts/remove_git_remotes.sh
       shell: bash
 
     - name: Set Version Information
