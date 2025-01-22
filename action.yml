@@ -84,6 +84,7 @@ runs:
         echo "pre_releasenumber=$PRE_RELEASE_NUMBER" >> $GITHUB_ENV
         echo "pre_releaselabel=$PRE_RELEASE_LABEL" >> $GITHUB_ENV
         echo "fullsemver=$FULL_SEMVER" >> $GITHUB_ENV
+        echo "FULL_SEMVER=$FULL_SEMVER" >> $GITHUB_ENV  # Ensure uppercase export
         echo "majorminorpatch=$MAJOR_MINOR_PATCH" >> $GITHUB_ENV
         echo "semver=$SEMVER" >> $GITHUB_ENV
         echo "major=$MAJOR" >> $GITHUB_ENV
@@ -214,7 +215,7 @@ runs:
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
 
-        # Create a new tag
+        # Create a new tag using the uppercase 'FULL_SEMVER' variable
         git tag "$FULL_SEMVER"
 
         # Push the new tag
