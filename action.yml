@@ -12,6 +12,10 @@ inputs:
     required: false
     default: false
     type: boolean
+  copy-buildinfo-to-folder:
+    description: "Optional destination folder to copy buildInfo.json into. If not set, the file will not be copied."
+    required: false
+    type: string
 
 outputs:
   version_fullsemver:
@@ -280,6 +284,14 @@ runs:
         echo "version_majorminorpatch=${{ env.majorminorpatch }}" >> $GITHUB_OUTPUT
         echo "version_prereleasetag=${{ env.pre_releaselabel }}" >> $GITHUB_OUTPUT
 
+      shell: bash
+
+    - name: Copy buildInfo.json to destination folder (if specified)
+      if: ${{ inputs.copy-buildinfo-to-folder != '' }}
+      run: |
+        echo "Copying buildInfo.json to '${{ inputs.copy-buildinfo-to-folder }}'"
+        mkdir -p "${{ inputs.copy-buildinfo-to-folder }}"
+        cp buildInfo.json "${{ inputs.copy-buildinfo-to-folder }}"
       shell: bash
 
     - name: Upload build-info artifact
