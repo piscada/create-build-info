@@ -245,7 +245,15 @@ runs:
         echo "CHANGELOG.md generation completed successfully."
       shell: bash
 
-    - name: Commit and Push CHANGELOG.md
+    - name: Copy buildInfo.json to destination folder (if specified)
+      if: ${{ inputs.copy-buildinfo-to-folder != '' }}
+      run: |
+        echo "Copying buildInfo.json to '${{ inputs.copy-buildinfo-to-folder }}'"
+        mkdir -p "${{ inputs.copy-buildinfo-to-folder }}"
+        cp buildInfo.json "${{ inputs.copy-buildinfo-to-folder }}"
+      shell: bash
+
+    - name: Commit and Push Buildinfo and Changelog
       if: ${{ inputs.push-changelog == 'true' && github.ref == 'refs/heads/main' }}
       run: |
         #!/bin/bash
@@ -284,14 +292,6 @@ runs:
         echo "version_majorminorpatch=${{ env.majorminorpatch }}" >> $GITHUB_OUTPUT
         echo "version_prereleasetag=${{ env.pre_releaselabel }}" >> $GITHUB_OUTPUT
 
-      shell: bash
-
-    - name: Copy buildInfo.json to destination folder (if specified)
-      if: ${{ inputs.copy-buildinfo-to-folder != '' }}
-      run: |
-        echo "Copying buildInfo.json to '${{ inputs.copy-buildinfo-to-folder }}'"
-        mkdir -p "${{ inputs.copy-buildinfo-to-folder }}"
-        cp buildInfo.json "${{ inputs.copy-buildinfo-to-folder }}"
       shell: bash
 
     - name: Upload build-info artifact
