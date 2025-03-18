@@ -147,33 +147,18 @@ runs:
           local previous_tag="$1"
           local end_ref="$2"
 
-          echo "-------------------------------"
-          echo "Generating commits between:"
-          echo "Previous Tag: '$previous_tag'"
-          echo "End Reference: '$end_ref'"
-          echo "-------------------------------"
-
           echo "## Version $end_ref" >> CHANGELOG.md
           echo "" >> CHANGELOG.md
           echo "### Commits" >> CHANGELOG.md
           echo "" >> CHANGELOG.md
 
+          # Only show last 30 commits
           if [ -z "$previous_tag" ]; then
-            echo "No previous tag found. Listing all commits up to '$end_ref'."
-            if git log --pretty=format:'- %s' "$end_ref" >> CHANGELOG.md; then
-              echo "Successfully listed commits up to '$end_ref'."
-            else
-              echo "Failed to list commits up to '$end_ref'."
-              exit 1
-            fi
+            # If there's no previous tag, we just list the last 30 commits up to HEAD
+            git log --pretty=format:'- %s' -n 30 "$end_ref" >> CHANGELOG.md
           else
-            echo "Listing commits between '$previous_tag' and '$end_ref'."
-            if git log --pretty=format:'- %s' "$previous_tag".."$end_ref" >> CHANGELOG.md; then
-              echo "Successfully listed commits between '$previous_tag' and '$end_ref'."
-            else
-              echo "Failed to list commits between '$previous_tag' and '$end_ref'."
-              exit 1
-            fi
+            # If there is a previous tag, still limit to 30 commits in that range
+            git log --pretty=format:'- %s' -n 30 "$previous_tag".."$end_ref" >> CHANGELOG.md
           fi
 
           echo "" >> CHANGELOG.md
