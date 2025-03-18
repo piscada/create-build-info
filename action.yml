@@ -96,7 +96,9 @@ runs:
         echo "patch=$PATCH" >> $GITHUB_ENV
         echo "commitid=$COMMIT_ID" >> $GITHUB_ENV
         echo "shortcommitid=$SHORT_COMMIT_ID" >> $GITHUB_ENV
-        echo "commitmessage=$COMMIT_MESSAGE" >> $GITHUB_ENV
+        echo "commitmessage<<EOF" >> $GITHUB_ENV
+        echo "$COMMIT_MESSAGE" >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
         echo "branchname=$BRANCH_NAME" >> $GITHUB_ENV
         echo "runnumber=$RUN_NUMBER" >> $GITHUB_ENV
 
