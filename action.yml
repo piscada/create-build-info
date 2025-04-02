@@ -152,13 +152,13 @@ runs:
           echo "### Commits" >> CHANGELOG.md
           echo "" >> CHANGELOG.md
 
-          # Only show last 30 commits
+          # Only show last 30 commits, filtering out unwanted messages
           if [ -z "$previous_tag" ]; then
-            # If there's no previous tag, we just list the last 30 commits up to HEAD
-            git log --pretty=format:'- %s' -n 30 "$end_ref" >> CHANGELOG.md
+            # If there's no previous tag, list the last 30 commits up to HEAD
+            git log --pretty=format:'- %s' -n 30 "$end_ref" | grep -v -E '\[skip ci\]|Merge branch' >> CHANGELOG.md
           else
-            # If there is a previous tag, still limit to 30 commits in that range
-            git log --pretty=format:'- %s' -n 30 "$previous_tag".."$end_ref" >> CHANGELOG.md
+            # If there is a previous tag, list the commits between that tag and HEAD
+            git log --pretty=format:'- %s' -n 30 "$previous_tag".."$end_ref" | grep -v -E '\[skip ci\]|Merge branch' >> CHANGELOG.md
           fi
 
           echo "" >> CHANGELOG.md
