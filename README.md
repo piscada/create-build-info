@@ -14,14 +14,15 @@
 
 ## Overview
 
-Automates the generation of buildInfo.json, CHANGELOG.md, and version.inc based on your Git history. It can also optionally commit these files back to your repository, streamlining your build and release process without relying on external versioning tools.
+Automates the generation of buildInfo.json, CHANGELOG.md, and version.inc based on your Git history. It can also optionally commit these files back to your repository and copy buildInfo.json to a specified folder, streamlining your build and release process without relying on external versioning tools.
 
 ## Inputs
 
-| Name           | Description                                                          | Required | Default |
-| -------------- | -------------------------------------------------------------------- | -------- | ------- |
-| artifact-name  | Name of the artifact to upload.                                      | Yes      | N/A     |
-| push-changelog | Commit and push CHANGELOG.md, version.inc, and buildInfo.json files. | No       | false   |
+| Name                     | Description                                                                                       | Required | Default |
+| ------------------------ | ------------------------------------------------------------------------------------------------- | -------- | ------- |
+| artifact-name            | Name of the artifact to upload.                                                                   | Yes      | N/A     |
+| push-changelog           | Commit and push CHANGELOG.md, version.inc, and buildInfo.json files.                              | No       | false   |
+| copy-buildinfo-to-folder | Optional destination folder to copy buildInfo.json into. If not set, the file will not be copied. | No       | N/A     |
 
 ## Outputs
 
