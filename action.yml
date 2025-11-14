@@ -102,25 +102,38 @@ runs:
         echo "branchname=$BRANCH_NAME" >> $GITHUB_ENV
         echo "runnumber=$RUN_NUMBER" >> $GITHUB_ENV
 
-        # Create buildInfo.json
-        cat > buildInfo.json <<EOF
-        {
-          "CommitDate": "${COMMIT_DATE}",
-          "PreReleaseNumber": ${PRE_RELEASE_NUMBER},
-          "PreReleaseLabel": "${PRE_RELEASE_LABEL}",
-          "FullSemVer": "${FULL_SEMVER}",
-          "MajorMinorPatch": "${MAJOR_MINOR_PATCH}",
-          "SemVer": "${SEMVER}",
-          "Major": ${MAJOR},
-          "Minor": ${MINOR},
-          "Patch": ${PATCH},
-          "CommitId": "${COMMIT_ID}",
-          "ShortCommitId": "${SHORT_COMMIT_ID}",
-          "CommitMessage": "${COMMIT_MESSAGE}",
-          "BranchName": "${BRANCH_NAME}",
-          "RunNumber": "${RUN_NUMBER}"
-        }
-        EOF
+        # Create buildInfo.json using jq for proper JSON escaping
+        jq -n \
+          --arg commitDate "$COMMIT_DATE" \
+          --argjson preReleaseNumber "$PRE_RELEASE_NUMBER" \
+          --arg preReleaseLabel "$PRE_RELEASE_LABEL" \
+          --arg fullSemVer "$FULL_SEMVER" \
+          --arg majorMinorPatch "$MAJOR_MINOR_PATCH" \
+          --arg semVer "$SEMVER" \
+          --argjson major "$MAJOR" \
+          --argjson minor "$MINOR" \
+          --argjson patch "$PATCH" \
+          --arg commitId "$COMMIT_ID" \
+          --arg shortCommitId "$SHORT_COMMIT_ID" \
+          --arg commitMessage "$COMMIT_MESSAGE" \
+          --arg branchName "$BRANCH_NAME" \
+          --arg runNumber "$RUN_NUMBER" \
+          '{
+            CommitDate: $commitDate,
+            PreReleaseNumber: $preReleaseNumber,
+            PreReleaseLabel: $preReleaseLabel,
+            FullSemVer: $fullSemVer,
+            MajorMinorPatch: $majorMinorPatch,
+            SemVer: $semVer,
+            Major: $major,
+            Minor: $minor,
+            Patch: $patch,
+            CommitId: $commitId,
+            ShortCommitId: $shortCommitId,
+            CommitMessage: $commitMessage,
+            BranchName: $branchName,
+            RunNumber: $runNumber
+          }' > buildInfo.json
 
         # Display buildInfo.json for debugging
         cat buildInfo.json
