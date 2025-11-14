@@ -61,8 +61,11 @@ runs:
         RUN_NUMBER=${GITHUB_RUN_NUMBER}
 
         # Determine Version Information
-        # Use the latest tag as the base version
-        LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+        # Use the latest tag as the base version (sorted by creation date)
+        LATEST_TAG=$(git tag --sort=-creatordate | head -n 1)
+        if [ -z "$LATEST_TAG" ]; then
+          LATEST_TAG="0.0.1"
+        fi
         BASE_VERSION=${LATEST_TAG#v}
 
         # Extract MAJOR, MINOR, PATCH, and PRE_RELEASE if exists
